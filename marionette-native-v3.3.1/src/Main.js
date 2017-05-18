@@ -3,6 +3,76 @@
 const _ = require('underscore');
 const Bb = require('backbone');
 const Mn = require('backbone.marionette');
+require('backbone.nativeview');
+
+var DomMixin = {
+  createBuffer: function createBuffer() {
+    return document.createDocumentFragment();
+  },
+  appendChildren: function appendChildren(el, children) {
+    if (_.isArray(children)) {
+      children.forEach(el.appendChild, el)
+    } else {
+      el.appendChild(children)
+    }
+  },
+  beforeEl: function beforeEl(el, sibling) {
+    el.insertBefore(sibling);
+  },
+  replaceEl: function replaceEl(newEl, oldEl) {
+    if (newEl === oldEl) {
+      return;
+    }
+
+    var parent = oldEl.parentNode;
+
+    if (!parent) {
+      return;
+    }
+
+    parent.replaceChild(newEl, oldEl);
+  },
+  detachContents: function detachContents(el) {
+    while (el.firstChild) {
+      el.removeChild(el.firstChild);
+    }
+  },
+  setInnerContent: function setInnerContent(el, html) {
+    el.innerHTML = html
+  },
+  detachEl: function detachEl(el) {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  },
+  removeEl: function removeEl(el) {
+    if (el.parentNode) el.parentNode.removeChild(el);
+    this.undelegateEvents();
+  },
+  findEls: function findEls(selector, context) {
+    if (_.isObject(selector)) {
+      return [selector]
+    }  else {
+      return this.el.querySelectorAll(selector);
+    }
+  }
+};
+
+var MnNativeMixin = _.extend({}, Backbone.NativeViewMixin, DomMixin, {
+  constructor: function () {
+    this._domEvents = [];
+    return Mn.View.apply(this, arguments);
+  }
+})
+
+var MnCollectionNativeMixin = _.extend({}, Backbone.NativeViewMixin, DomMixin, {
+  constructor: function () {
+    this._domEvents = [];
+    return Mn.NextCollectionView.apply(this, arguments);
+  }
+})
+
+Mn.NativeView = Mn.View.extend(MnNativeMixin);
+
+Mn.NativeCollectionView = Mn.NextCollectionView.extend(MnCollectionNativeMixin);
 
 const rowTemplate = _.template(`
 <td class="col-md-1"><%- id %></td>
@@ -110,28 +180,28 @@ const Store = Bb.Collection.extend({
 
 const store = new Store();
  
-const ChildView = Mn.View.extend({
+const ChildView = Mn.NativeView.extend({
     modelEvents: {
         'change:label': 'render'
     },
     tagName: 'tr',
     template: rowTemplate,
     setSelected() {
-        this.$el.addClass('danger');
+        this.el.classList.add('danger');
     },
     events: {
         'click .js-link': 'onSelect',
         'click .js-del': 'onDelete'
     },
     onSelect() {
-      this.trigger('select');
+      this.trigger('select', this);
     },
     onDelete() {
-       this.trigger('delete');
+       this.trigger('delete', this);
     }
 });
 
-const CollectionView = Mn.NextCollectionView.extend({
+const CollectionView = Mn.NativeCollectionView.extend({
     reorderOnSort: true,
     el: '#tbody',
     childView: ChildView,
@@ -139,7 +209,8 @@ const CollectionView = Mn.NextCollectionView.extend({
         this.listenTo(state, 'change:selected', this.setSelect);
     },
     setSelect(model, selectedId) {
-        this.$('.danger').removeClass('danger');
+        var el = _.first(this.$('.danger'));
+        if (el) el.classList.remove('danger');
         
         if (selectedId) {
             const selectedView = this.children.findByModel(this.collection.get(selectedId));
