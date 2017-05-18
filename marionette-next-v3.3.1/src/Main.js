@@ -125,7 +125,7 @@ const ChildView = Mn.View.extend({
     }
 });
 
-const CollectionView = Mn.CollectionView.extend({
+const CollectionView = Mn.NextCollectionView.extend({
     reorderOnSort: true,
     el: '#tbody',
     childView: ChildView,
