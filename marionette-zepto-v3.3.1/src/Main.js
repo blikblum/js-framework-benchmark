@@ -124,10 +124,10 @@ const ChildView = Mn.View.extend({
         'click .js-del': 'onDelete'
     },
     onSelect() {
-      this.trigger('select');
+      this.trigger('select', this);
     },
     onDelete() {
-       this.trigger('delete');
+       this.trigger('delete', this);
     }
 });
 

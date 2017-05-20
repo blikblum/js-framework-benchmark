@@ -9,7 +9,11 @@ var loaders = [
 	{
 		test: /\.css$/,
 		loader: 'style-loader!css-loader'
-	}
+	},
+  {
+    test: require.resolve('zepto'),
+    loader: 'imports-loader?this=>window'
+  }
 ];
 var extensions = [
 	'', '.js', '.jsx', '.es6.js'
@@ -28,12 +32,13 @@ module.exports = [{
 		filename: '[name].js'
 	},
 	resolve: {
+		alias: {
+			jquery: 'zepto'
+		},
 		extensions: extensions,
 		root: [
 			__dirname,
 			__dirname + '/src'
-		],
-		alias: {
-		}
+		]
 	}
 }];
