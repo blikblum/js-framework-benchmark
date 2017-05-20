@@ -56,7 +56,20 @@ var DomMixin = {
   }
 };
 
-var MnNativeMixin = _.extend({}, Backbone.NativeViewMixin, DomMixin, {
+var NativeViewMixinPatches = {
+  _setElement: function (element) {
+    Backbone.NativeViewMixin._setElement.call(this, element);
+    this.$el = [this.el]
+  },
+
+  delegate: function(eventName, selector, listener) {
+    var dotIndex = eventName.indexOf('.')
+    if (dotIndex > 0) eventName = eventName.slice(0, dotIndex).trim();
+    Backbone.NativeViewMixin.delegate.call(this, eventName, selector, listener);
+  }
+}
+
+var MnNativeMixin = _.extend({}, Backbone.NativeViewMixin, NativeViewMixinPatches, DomMixin, {
   constructor: function () {
     this._domEvents = [];
     return Mn.View.apply(this, arguments);
@@ -236,7 +249,7 @@ const collectionView = new CollectionView({
 
 collectionView.render();
 
-const MainView = Mn.View.extend({
+const MainView = Mn.NativeView.extend({
     el : '.jumbotron',
     triggers: {
         'click #run': 'run',

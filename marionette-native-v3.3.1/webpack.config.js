@@ -34,6 +34,7 @@ module.exports = [{
 			__dirname + '/src'
 		],
 		alias: {
+			jquery: __dirname + '/dummyjquery.js'
 		}
 	}
 }];
