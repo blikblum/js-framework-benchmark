@@ -3,19 +3,31 @@
 const _ = require('underscore');
 const Bb = require('backbone');
 const Mn = require('backbone.marionette');
+const h = require('hyperscript');
 
-const rowTemplate = _.template(`
-<td class="col-md-1"><%- id %></td>
-<td class="col-md-4">
-    <a class="js-link"><%- label %></a>
-</td>
-<td class="col-md-1">
-    <a class="js-del">
-        <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-    </a>
-</td>
-<td class="col-md-6"></td>
-`);
+const rowTemplate = function(data) {
+  return [
+    h("td.col-md-1", data.id),
+    h("td.col-md-4", [
+      h("a.js-link", data.label)
+    ]),
+    h("td.col-md-1", [
+      h("a.js-del", [
+        h("span.glyphicon.glyphicon-remove", {
+          "aria-hidden": "true"
+        })
+      ])
+    ]),
+    h("td.col-md-6")
+  ]
+}
+
+const hyperRenderer = function (template, data) {
+  if (this.isRendered()) this.$el.empty()
+  // hyperscript does not have ability to use an existing el as root
+  var children = template(data, this.el)
+  children.forEach(this.el.appendChild, this.el)
+}
 
 var startTime;
 var lastMeasure;
@@ -124,12 +136,14 @@ const ChildView = Mn.View.extend({
         'click .js-del': 'onDelete'
     },
     onSelect() {
-      this.trigger('select');
+      this.trigger('select', this);
     },
     onDelete() {
-       this.trigger('delete');
+       this.trigger('delete', this);
     }
 });
+
+ChildView.setRenderer(hyperRenderer)
 
 const CollectionView = Mn.NextCollectionView.extend({
     reorderOnSort: true,
