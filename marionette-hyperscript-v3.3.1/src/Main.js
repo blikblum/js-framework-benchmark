@@ -7,9 +7,9 @@ const h = require('hyperscript');
 
 const rowTemplate = function(data) {
   return [
-    h("td.col-md-1", data.id),
+    h("td.col-md-1", {}, data.id),
     h("td.col-md-4", [
-      h("a.js-link", data.label)
+      h("a.js-link", {}, data.label)
     ]),
     h("td.col-md-1", [
       h("a.js-del", [
