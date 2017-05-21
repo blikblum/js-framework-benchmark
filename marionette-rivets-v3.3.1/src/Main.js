@@ -3,11 +3,13 @@
 const _ = require('underscore');
 const Bb = require('backbone');
 const Mn = require('backbone.marionette');
+const rivets = require('rivets');
+require('rivets-backbone-adapter');
 
-const rowTemplate = _.template(`
-<td class="col-md-1"><%- id %></td>
+const rowTemplate = `
+<td class="col-md-1">{model:id}</td>
 <td class="col-md-4">
-    <a class="js-link"><%- label %></a>
+    <a class="js-link">{model:label}</a>
 </td>
 <td class="col-md-1">
     <a class="js-del">
@@ -15,7 +17,19 @@ const rowTemplate = _.template(`
     </a>
 </td>
 <td class="col-md-6"></td>
-`);
+`;
+
+const rivetsRenderer = function (template, data) {
+  if (!this.rivetsView) {
+    this.on('destroy', function() {
+      if (this.rivetsView) this.rivetsView.unbind()
+    }, this)
+  } else {
+    this.rivetsView.unbind()
+  }
+  this.el.innerHTML = template;
+  this.rivetsView = rivets.bind(this.el, this)
+}
 
 var startTime;
 var lastMeasure;
@@ -111,9 +125,6 @@ const Store = Bb.Collection.extend({
 const store = new Store();
  
 const ChildView = Mn.View.extend({
-    modelEvents: {
-        'change:label': 'render'
-    },
     tagName: 'tr',
     template: rowTemplate,
     setSelected() {
@@ -130,6 +141,8 @@ const ChildView = Mn.View.extend({
        this.trigger('delete', this);
     }
 });
+
+ChildView.setRenderer(rivetsRenderer)
 
 const CollectionView = Mn.NextCollectionView.extend({
     reorderOnSort: true,

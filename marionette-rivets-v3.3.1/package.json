@@ -19,6 +19,7 @@
     "backbone.radio": "2.0.0",
     "jquery": "^3.2.1",
     "rivets": "https://github.com/blikblum/rivets#svelte",
+    "rivets-backbone-adapter": "https://github.com/blikblum/rivets-backbone-adapter#svelte",
     "underscore": "1.8.3"
   }
 }
