@@ -6,6 +6,7 @@ const Mn = require('backbone.marionette');
 const h = require('virtual-dom/h');
 const diff = require('virtual-dom/diff');
 const patch = require('virtual-dom/patch');
+const createElement = require('virtual-dom/create-element');
 
 const rowTemplate = function(data) {
   return [
@@ -32,12 +33,23 @@ function createVirtualTree(view, children) {
 }
 
 const virtualDOMRenderer = function (template, data) {
-  if (!this.elVirtualTree) this.elVirtualTree = createVirtualTree(this)
-
   var children = template(data)
   let newVirtualTree = createVirtualTree(this, children)
-  let treeDiff = diff(this.elVirtualTree, newVirtualTree)
-  patch(this.el, treeDiff)
+  if (!this.elVirtualTree) {
+    //first render
+    //virtual-dom does not provide an api to render the children of an element
+    //applying patch in first render works but is not optimal
+    let node = this.el
+    for (var i = 0; i < children.length; i++) {
+      var childNode = createElement(children[i])
+      if (childNode) {
+        node.appendChild(childNode)
+      }
+    }
+  } else {
+    let treeDiff = diff(this.elVirtualTree, newVirtualTree)
+    patch(this.el, treeDiff)
+  }
   this.elVirtualTree = newVirtualTree
 }
 
