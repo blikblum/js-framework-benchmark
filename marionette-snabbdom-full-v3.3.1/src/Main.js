@@ -4,14 +4,7 @@ const _ = require('underscore');
 const Bb = require('backbone');
 const Mn = require('backbone.marionette');
 var snabbdom = require('snabbdom');
-var patch = snabbdom.init([ // Init patch function with chosen modules
-  require('snabbdom/modules/attributes').default,
-  require('snabbdom/modules/eventlisteners').default,
-  require('snabbdom/modules/class').default,
-  require('snabbdom/modules/props').default,
-  require('snabbdom/modules/style').default,
-  require('snabbdom/modules/dataset').default
-]);
+var renderer = require('marionette.renderers/snabbdom')
 var h = require('snabbdom/h').default; // helper function for creating vnodes
 
 const rowsTemplate = function(view) {
@@ -30,24 +23,6 @@ const rowsTemplate = function(view) {
         h("td.col-md-6")
       ])
     })  
-}
-
-function createVirtualTree(view, children) {
-  let options = {attrs: _.extend({}, _.result(view, 'attributes'))}
-  let className = _.result(view, 'className')
-  if (className) options.props = {className: className}
-  return h(view.tagName, options, children)
-}
-
-const snabbDomRenderer = function (template, data) {
-  var children = template(this)
-  let newVirtualTree = createVirtualTree(this, children)
-  if (!this.elVirtualTree) {
-    this.elVirtualTree = createVirtualTree(this)
-    this.elVirtualTree.elm = this.el
-  } 
-  patch(this.elVirtualTree, newVirtualTree)
-  this.elVirtualTree = newVirtualTree
 }
 
 var startTime;
@@ -150,6 +125,8 @@ const RowsView = Mn.View.extend({
     tagName: 'tbody',
     
     template: rowsTemplate,
+
+    thisAsState: true, //pass this as parameter to renderer
     
     initialize() {
         this.rerender = _.debounce(this.render, 0)
@@ -177,7 +154,7 @@ const RowsView = Mn.View.extend({
     }
 });
 
-RowsView.setRenderer(snabbDomRenderer)
+RowsView.setRenderer(renderer)
 
 const collectionView = new RowsView({
     collection: store
